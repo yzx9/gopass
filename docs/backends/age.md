@@ -69,6 +69,16 @@ You can interact with the agent using the following commands:
 - `gopass age agent`: starts the agent in the foreground.
 - `gopass age lock`: locks the agent, clearing all cached passphrases.
 
+### Embedders
+
+Programs that embed gopass as a library (e.g. gopass-jsonapi) cannot rely on
+the `gopass` CLI being present to spawn the agent. They can self-host it with
+`pkg/ageagent`: call `ageagent.WithSelfLauncher(ctx)` once during startup,
+before any store is initialized, and expose a hidden `age agent start` command
+whose action is `ageagent.Serve(ctx)`. Without a registered launcher the
+backend simply skips autostart and prompts for the identity passphrase on each
+operation.
+
 ## Usage with a yubikey
 
 To use with a Yubikey, `age` requires the usage of the [age-plugin-yubikey plugin](https://github.com/str4d/age-plugin-yubikey/).

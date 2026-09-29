@@ -454,6 +454,10 @@ func (l loader) Commands() []*cli.Command {
 	}
 }
 
+// agent backs `age agent start`. It intentionally does not delegate to
+// pkg/ageagent.Serve: that package imports this one (WithAgentLauncher,
+// SpawnGuardEnv), so delegating would be an import cycle. Keep the two
+// implementations in sync.
 func (l loader) agent(ctx context.Context, cmd *cli.Command) error {
 	out.Printf(ctx, "Starting age agent ...")
 

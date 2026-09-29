@@ -16,6 +16,9 @@
 // non-interactive use cases with a fixed passphrase, use
 // [github.com/gopasspw/gopass/pkg/ctxutil.WithAgePassphrase].
 //
+// Embedders that want age-agent support (no per-operation passphrase prompt)
+// can self-host the agent with [github.com/gopasspw/gopass/pkg/ageagent].
+//
 // Known consumers of this API:
 //   - https://github.com/gopasspw/gopass-hibp
 //   - https://github.com/gopasspw/gopass-jsonapi

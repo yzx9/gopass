@@ -6,6 +6,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/base64"
+	"errors"
 	"fmt"
 	"io"
 	"net"
@@ -59,6 +60,16 @@ func New() (*Agent, error) {
 func (a *Agent) Run(ctx context.Context) error {
 	// listen on the socket
 	l, err := net.Listen("unix", a.socketPath)
+	if err != nil && isStaleSocket(a.socketPath) {
+		// A leftover socket file from an agent that died without Shutdown
+		// would block Listen (and thus auto-start) forever. Nobody answers
+		// on it, so remove it and try once more (ssh-agent pattern).
+		debug.Log("removing stale socket %s", a.socketPath)
+		if rmErr := os.Remove(a.socketPath); rmErr != nil {
+			return fmt.Errorf("failed to remove stale socket: %w", rmErr)
+		}
+		l, err = net.Listen("unix", a.socketPath)
+	}
 	if err != nil {
 		return fmt.Errorf("failed to listen on socket: %w", err)
 	}
@@ -94,6 +105,25 @@ func (a *Agent) Run(ctx context.Context) error {
 		}
 		go a.handleConnection(ctx, conn)
 	}
+}
+
+// isStaleSocket reports whether the socket file at path has no live listener
+// behind it: it exists but dialing it is refused, i.e. it is a leftover from
+// an agent that died without removing it. A socket that answers, a missing
+// file, or any other dial error (e.g. permission) is not ours to judge.
+func isStaleSocket(path string) bool {
+	if _, err := os.Stat(path); err != nil {
+		return false
+	}
+
+	conn, err := net.Dial("unix", path)
+	if err == nil {
+		_ = conn.Close()
+
+		return false
+	}
+
+	return errors.Is(err, syscall.ECONNREFUSED)
 }
 
 // Shutdown stops the agent.
