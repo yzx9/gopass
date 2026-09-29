@@ -145,7 +145,7 @@ func (a *Age) tryStartAgent(ctx context.Context) {
 	// another. Without this guard, embedding gopass in a host that re-enters
 	// New -> tryStartAgent (e.g. gopass-jsonapi, which runs api.New before CLI
 	// dispatch) fork-bombs. The standalone CLI sets SpawnGuardEnv on the spawned
-	// process via internal/ageagentlauncher.
+	// process via pkg/ageagent.
 	if isAgentSpawnProcess() {
 		debug.Log("age agent spawn already in progress, skipping autostart to avoid fork bomb")
 
