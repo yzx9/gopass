@@ -32,6 +32,15 @@ import (
 // without spawning a real agent.
 var execCommand = exec.Command
 
+// waitChild reaps the spawned agent process when it eventually exits, so
+// long-lived hosts don't accumulate zombies. Indirection over the goroutine
+// lets tests take over waiting on the spawned child themselves.
+var waitChild = func(cmd *exec.Cmd) {
+	go func() {
+		_ = cmd.Wait()
+	}()
+}
+
 // WithSelfLauncher registers an agent launcher that re-executes the current
 // binary as `<argv0> age agent start` and detaches it. Use it if (and only if)
 // the calling program provides an `age agent start` command backed by Serve;
