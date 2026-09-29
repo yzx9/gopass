@@ -23,7 +23,6 @@ import (
 	ap "github.com/gopasspw/gopass/internal/action"
 	"github.com/gopasspw/gopass/internal/action/exit"
 	"github.com/gopasspw/gopass/internal/action/pwgen"
-	"github.com/gopasspw/gopass/internal/ageagentlauncher"
 	_ "github.com/gopasspw/gopass/internal/backend/crypto"
 	"github.com/gopasspw/gopass/internal/backend/crypto/gpg"
 	_ "github.com/gopasspw/gopass/internal/backend/storage"
@@ -32,6 +31,7 @@ import (
 	"github.com/gopasspw/gopass/internal/out"
 	"github.com/gopasspw/gopass/internal/queue"
 	"github.com/gopasspw/gopass/internal/store/leaf"
+	"github.com/gopasspw/gopass/pkg/ageagent"
 	"github.com/gopasspw/gopass/pkg/ctxutil"
 	"github.com/gopasspw/gopass/pkg/debug"
 	"github.com/gopasspw/gopass/pkg/protect"
@@ -394,10 +394,10 @@ func initContext(ctx context.Context, cfg *config.Config) context.Context {
 	}
 
 	// The standalone gopass binary owns the `age agent start` subcommand, so it
-	// can auto-start the age agent by re-executing itself. Library embedders do
-	// not register a launcher and get graceful degradation instead of a fork
-	// bomb. See internal/ageagentlauncher.
-	ctx = ageagentlauncher.Register(ctx)
+	// can auto-start the age agent by re-executing itself. Library embedders
+	// register their own launcher via pkg/ageagent (or none) and get graceful
+	// degradation instead of a fork bomb. See pkg/ageagent.
+	ctx = ageagent.WithSelfLauncher(ctx)
 
 	return ctx
 }

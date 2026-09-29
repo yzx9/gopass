@@ -1,6 +1,6 @@
 //go:build windows
 
-package ageagentlauncher
+package ageagent
 
 import (
 	"context"
